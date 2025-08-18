@@ -1,5 +1,8 @@
 import discord
 from discord.ext import commands
+import random
+import json
+import os
 
 # Minimal required intents
 intents = discord.Intents.default()
