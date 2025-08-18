@@ -168,7 +168,7 @@ async def help_cmd(ctx):
     ]
     await ctx.send("\n".join(lines))
 
-@bot.command(name="brett", aliases=["BRETT", "Brett"])
+@bot.command(name="brett")
 async def brett_cmd(ctx):
     outcome = random.choice(OUTCOMES)
     stats, u = record_roll(ctx.author.id, outcome)
