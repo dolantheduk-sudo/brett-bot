@@ -50,6 +50,55 @@ BRETT_QUOTES = [
     "Don't give up the ship! - Commodore Oliver Hazard Perry, June 1st 1813"
 ]
 
+# --- Optional: scoring map so BrettBattle can pick a winner from Brett outcomes
+# Higher = “more positive”
+BRETT_SCORE = {
+    "Nah": 0,
+    "Don't Bet on It": 1,
+    "Maybe Later": 2,
+    "Could Be": 3,
+    "Chances Are Good": 4,
+    "You Betcha": 5,
+}
+
+# --- Moods for !mood
+BRETT_MOODS = [
+    ("Chill", "🧊"),
+    ("Cracked", "🤪"),
+    ("Spicy", "🌶️"),
+    ("Blessed", "✨"),
+    ("Sleepy", "😴"),
+    ("Giga-Focus", "🎯"),
+    ("Gremlin", "🧌"),
+    ("Saucy", "🫗"),
+    ("Chaos", "🌀"),
+    ("Turbo", "⚡"),
+]
+
+# --- WH40k outcomes for !chaos (20 results)
+CHAOS_OUTCOMES_40K = [
+    "The Warp surges — reality flickers.",
+    "For the Emperor! (…or was it for Chaos?)",
+    "Blood for the Blood God. Skulls for the Skull Throne.",
+    "The Omnissiah hums approvingly.",
+    "The Inquisition is already suspicious of you.",
+    "Daemons whisper; the veil thins.",
+    "Astartes land: hope… or doom.",
+    "Orks shout ‘WAAAGH!’ from the void.",
+    "The dice are heresy — burn them.",
+    "A psyker sneezes; a star explodes.",
+    "Necrons awaken; your timeline resets.",
+    "A tech-priest offers sacred WD-40.",
+    "The Machine Spirit demands a reroll.",
+    "Warp storm ahead: charts are meaningless.",
+    "You found a STC: everyone wants it.",
+    "The Grey Knights forgot the bleach.",
+    "Tzeentch smiles at your plans.",
+    "Nurgle gifts you ‘friendship’ (it itches).",
+    "Slaanesh applauds your aesthetics.",
+    "Khorne is disappointed by your restraint.",
+]
+
 EMOJI_FOR = {
     "Nah": "❌",
     "You Betcha": "✅",
@@ -198,6 +247,10 @@ async def help_cmd(ctx):
         "`!odds` — Show Brett’s odds",
         "`!8brett <question>` — Magic 8-Ball mode (20 responses, no stats)",
         "`!resetstats` — (Admin) Reset all stats",
+        "**!brettbattle @user** — Battle another user with Brett rolls",
+        "**!leaderboard** — Show top rollers in this server",
+        "**!mood [@user]** — Reveal a random mood with emoji, optionally add username",
+        "**!chaos** — Invoke the Warp",
     ]
     await ctx.send("\n".join(lines))
 
@@ -388,6 +441,113 @@ async def eight_brett_cmd(ctx, *, question: str = ""):
 async def resetstats_cmd(ctx):
     save_stats(_blank_stats())
     await ctx.send("🧹 All Brett stats reset.")
+    
+@bot.command(name="brettbattle", aliases=["battle", "duel"])
+async def brettbattle_cmd(ctx, opponent: discord.Member):
+    if opponent.bot:
+        await ctx.send("Brett refuses to battle bots 😤")
+        return
+    p1 = ctx.author
+    p2 = opponent
+
+    # Roll outcomes
+    import random
+    o1 = random.choice(OUTCOMES)
+    o2 = random.choice(OUTCOMES)
+
+    # Update stats (deluxe or simple)
+    try:
+        # deluxe style
+        record_roll(p1.id, o1)
+        record_roll(p2.id, o2)
+    except NameError:
+        # simple stats fallback
+        global stats  # using your earlier simple dict
+        user1 = str(p1.id)
+        user2 = str(p2.id)
+        stats.setdefault("rolls", {})
+        stats.setdefault("total", 0)
+        stats["total"] += 2
+        stats["rolls"].setdefault(user1, {"count": 0})
+        stats["rolls"].setdefault(user2, {"count": 0})
+        stats["rolls"][user1]["count"] += 1
+        stats["rolls"][user2]["count"] += 1
+        save_stats()
+
+    # Decide winner
+    s1 = BRETT_SCORE.get(o1, 0)
+    s2 = BRETT_SCORE.get(o2, 0)
+
+    if s1 > s2:
+        verdict = f"🏆 **{p1.display_name}** wins!"
+    elif s2 > s1:
+        verdict = f"🏆 **{p2.display_name}** wins!"
+    else:
+        verdict = "🤝 It’s a tie. The Warp is fickle."
+
+    msg = (
+        f"⚔️ **Brett Battle!**\n"
+        f"{p1.mention} rolled **{o1}** vs {p2.mention} rolled **{o2}**\n"
+        f"{verdict}"
+    )
+    await ctx.send(msg)
+
+@bot.command(name="leaderboard", aliases=["top", "lb"])
+async def leaderboard_cmd(ctx):
+    # Prefer deluxe stats if present
+    rows = []
+    try:
+        stats = load_stats()
+        users = stats.get("users", {})
+        # Restrict to members of this guild if we can
+        guild_member_ids = {m.id for m in ctx.guild.members} if ctx.guild else None
+        for uid_str, udata in users.items():
+            uid = int(uid_str)
+            if guild_member_ids is not None and uid not in guild_member_ids:
+                continue
+            rows.append((udata.get("total", 0), uid))
+    except NameError:
+        # simple stats fallback
+        global stats
+        # simple dict only tracks per-user counts under stats["rolls"]
+        guild_member_ids = {m.id for m in ctx.guild.members} if ctx.guild else None
+        for user_id_str, rec in stats.get("rolls", {}).items():
+            uid = int(user_id_str)
+            if guild_member_ids is not None and uid not in guild_member_ids:
+                continue
+            rows.append((rec.get("count", 0), uid))
+
+    rows.sort(reverse=True)
+    top = rows[:10]
+    if not top:
+        await ctx.send("No rolls yet — time to `!brett`!")
+        return
+
+    lines = ["🏆 **Brett Leaderboard** (server)"]
+    for rank, (count, uid) in enumerate(top, start=1):
+        try:
+            member = await ctx.guild.fetch_member(uid)
+            name = member.display_name
+        except Exception:
+            user = await bot.fetch_user(uid)
+            name = user.name
+        lines.append(f"{rank}. **{name}** — {count}")
+
+    await ctx.send("\n".join(lines))
+
+@bot.command(name="mood")
+async def mood_cmd(ctx, member: discord.Member | None = None):
+    member = member or ctx.author
+    import random
+    label, emoji = random.choice(BRETT_MOODS)
+    await ctx.send(f"{emoji} **{member.display_name}** feels *{label}*.")
+
+@bot.command(name="chaos", aliases=["wh40k", "warp"])
+async def chaos_cmd(ctx):
+    import random
+    msg = random.choice(CHAOS_OUTCOMES_40K)
+    await ctx.send(f"🌀 **CHAOS**: {msg}")
+
 
 @resetstats_cmd.error
 async def resetstats_error(ctx, error):
