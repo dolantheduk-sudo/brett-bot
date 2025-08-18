@@ -456,34 +456,38 @@ async def brettbattle_cmd(ctx, opponent: discord.Member):
 
 @bot.command(name="leaderboard", aliases=["top", "lb"])
 async def leaderboard_cmd(ctx):
-    rows = []
+    """Global top rollers (no members intent required)."""
     stats = load_stats()
     users = stats.get("users", {})
-    # Restrict to members of this guild if we can
-    guild_member_ids = {m.id for m in ctx.guild.members} if ctx.guild else None
-    for uid_str, udata in users.items():
-        uid = int(uid_str)
-        if guild_member_ids is not None and uid not in guild_member_ids:
-            continue
-        rows.append((udata.get("total", 0), uid))
 
-    rows.sort(reverse=True)
-    top = rows[:10]
-    if not top:
+    # Build (count, uid) and take top 10
+    rows = sorted(
+        ((u.get("total", 0), int(uid)) for uid, u in users.items()),
+        reverse=True
+    )[:10]
+
+    if not rows:
         await ctx.send("No rolls yet — time to `!brett`!")
         return
 
-    lines = ["🏆 **Brett Leaderboard** (server)"]
-    for rank, (count, uid) in enumerate(top, start=1):
-        try:
-            member = await ctx.guild.fetch_member(uid)
-            name = member.display_name
-        except Exception:
-            user = await bot.fetch_user(uid)
-            name = user.name
+    lines = ["🏆 **Brett Leaderboard** (global)"]
+    for rank, (count, uid) in enumerate(rows, start=1):
+        # Try nice names from this guild; fallback to username
+        name = None
+        if ctx.guild:
+            m = ctx.guild.get_member(uid)
+            if m:
+                name = m.display_name
+        if not name:
+            try:
+                usr = await bot.fetch_user(uid)
+                name = usr.name
+            except Exception:
+                name = f"User {uid}"
         lines.append(f"{rank}. **{name}** — {count}")
 
     await ctx.send("\n".join(lines))
+
 
 @bot.command(name="mood")
 async def mood_cmd(ctx, member: discord.Member | None = None):
