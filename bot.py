@@ -310,7 +310,6 @@ async def allstats_cmd(ctx):
         lines.append(f"- {name}: **{c}** ({pct(c, total)})")
 
     # Top rollers (this server only if possible)
-    # Build list of (count, name) for members present in this guild
     rows = []
     guild_members = {m.id: m.display_name for m in ctx.guild.members} if ctx.guild else {}
     for uid_str, u in stats["users"].items():
@@ -373,7 +372,6 @@ async def chart_cmd(ctx, member: discord.Member | None = None):
     for c, name in rows:
         emoji = EMOJI_FOR.get(name, "🎲")
         bar = big_emoji_bar(c, total, width=28)
-        # Align name column to be neat
         lines.append(f"{emoji} {name:<18} | {bar}  {c:>3} ({(100*c/total):.1f}%)")
     lines.append("```")
 
@@ -383,7 +381,6 @@ async def chart_cmd(ctx, member: discord.Member | None = None):
         lines.append(f"⭐ Most rolled: **{top_name}** × {top_count} ({(100*top_count/total):.1f}%)")
 
     await ctx.send("\n".join(lines))
-
 
 @bot.command(name="brettquote")
 async def brettquote_cmd(ctx):
@@ -419,9 +416,8 @@ async def eight_brett_cmd(ctx, *, question: str = ""):
 @bot.command(name="resetstats")
 @commands.has_permissions(administrator=True)
 async def resetstats(ctx):
-    global stats  # keep this here if you fully reassign stats
-    stats = {"rolls": {}, "total": 0}
-    save_stats()
+    # Reset the JSON stats cleanly (no global needed)
+    save_stats(_blank_stats())
     await ctx.send("🔄 All stats have been reset.")
 
 @bot.command(name="brettbattle", aliases=["battle", "duel"])
@@ -433,12 +429,10 @@ async def brettbattle_cmd(ctx, opponent: discord.Member):
     p2 = opponent
 
     # Roll outcomes
-    import random
     o1 = random.choice(OUTCOMES)
     o2 = random.choice(OUTCOMES)
 
-    # Update stats (deluxe or simple)
-    # deluxe style
+    # Update stats
     record_roll(p1.id, o1)
     record_roll(p2.id, o2)
 
@@ -462,17 +456,16 @@ async def brettbattle_cmd(ctx, opponent: discord.Member):
 
 @bot.command(name="leaderboard", aliases=["top", "lb"])
 async def leaderboard_cmd(ctx):
-    # Prefer deluxe stats if present
     rows = []
-        stats = load_stats()
-        users = stats.get("users", {})
-        # Restrict to members of this guild if we can
-        guild_member_ids = {m.id for m in ctx.guild.members} if ctx.guild else None
-        for uid_str, udata in users.items():
-            uid = int(uid_str)
-            if guild_member_ids is not None and uid not in guild_member_ids:
-                continue
-            rows.append((udata.get("total", 0), uid))
+    stats = load_stats()
+    users = stats.get("users", {})
+    # Restrict to members of this guild if we can
+    guild_member_ids = {m.id for m in ctx.guild.members} if ctx.guild else None
+    for uid_str, udata in users.items():
+        uid = int(uid_str)
+        if guild_member_ids is not None and uid not in guild_member_ids:
+            continue
+        rows.append((udata.get("total", 0), uid))
 
     rows.sort(reverse=True)
     top = rows[:10]
@@ -495,16 +488,13 @@ async def leaderboard_cmd(ctx):
 @bot.command(name="mood")
 async def mood_cmd(ctx, member: discord.Member | None = None):
     member = member or ctx.author
-    import random
     label, emoji = random.choice(BRETT_MOODS)
     await ctx.send(f"{emoji} **{member.display_name}** feels *{label}*.")
 
 @bot.command(name="chaos", aliases=["wh40k", "warp"])
 async def chaos_cmd(ctx):
-    import random
     msg = random.choice(CHAOS_OUTCOMES_40K)
     await ctx.send(f"🌀 **CHAOS**: {msg}")
-
 
 @resetstats.error
 async def resetstats_error(ctx, error):
