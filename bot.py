@@ -438,7 +438,6 @@ async def brettbattle_cmd(ctx, opponent: discord.Member):
     o2 = random.choice(OUTCOMES)
 
     # Update stats (deluxe or simple)
-    try:
         # deluxe style
         record_roll(p1.id, o1)
         record_roll(p2.id, o2)
@@ -465,7 +464,6 @@ async def brettbattle_cmd(ctx, opponent: discord.Member):
 async def leaderboard_cmd(ctx):
     # Prefer deluxe stats if present
     rows = []
-    try:
         stats = load_stats()
         users = stats.get("users", {})
         # Restrict to members of this guild if we can
