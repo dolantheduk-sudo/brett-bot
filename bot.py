@@ -438,9 +438,9 @@ async def brettbattle_cmd(ctx, opponent: discord.Member):
     o2 = random.choice(OUTCOMES)
 
     # Update stats (deluxe or simple)
-        # deluxe style
-        record_roll(p1.id, o1)
-        record_roll(p2.id, o2)
+    # deluxe style
+    record_roll(p1.id, o1)
+    record_roll(p2.id, o2)
 
     # Decide winner
     s1 = BRETT_SCORE.get(o1, 0)
