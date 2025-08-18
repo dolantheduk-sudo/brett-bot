@@ -15,6 +15,15 @@ OUTCOMES = [
     "Don't Bet on It",
     "Chances Are Good",
 ]
+EIGHT_BALL_OUTCOMES = [
+    "It is certain", "It is decidedly so", "Without a doubt", "Yes – definitely",
+    "You may rely on it", "As I see it, yes", "Most likely", "Outlook good",
+    "Yes", "Signs point to yes",
+    "Reply hazy, try again", "Ask again later", "Better not tell you now",
+    "Cannot predict now", "Concentrate and ask again",
+    "Don't count on it", "My reply is no", "My sources say no",
+    "Outlook not so good", "Very doubtful"
+]
 BRETT_QUOTES = [
     "Brett once rolled Double Brett and took the rest of the day off.",
     "You betcha… unless Brett says nah.",
@@ -31,8 +40,31 @@ BRETT_QUOTES = [
     "Are you getting this down Austin?",
     "Faggots Beware and the sequel are unrivaled classics",
     "Callie's a bitch shomtimes, shomtimes, shomtimes...",
-    "plug it up plug it up, urethra hole"
+    "plug it up plug it up, urethra hole",
+    "Besner went to law school",
+    "Is Baldur's Gate 3 really the best game ever made Jared?",
+    "Makoto Niijima #1",
+    "Dan please fucking watch Frieren: Beyond Journey's End I beg of you for the love of god",
+    "EAT SLEEP SHIT EVERYTHING BRICK SQUAD",
+    "Don't give up the ship! - Commodore Oliver Hazard Perry, June 1st 1813"
 ]
+
+EMOJI_FOR = {
+    "Nah": "❌",
+    "You Betcha": "✅",
+    "Maybe Later": "⏳",
+    "Could Be": "🤔",
+    "Don't Bet on It": "🚫",
+    "Chances Are Good": "🍀",
+}
+
+def big_emoji_bar(count: int, total: int, width: int = 28) -> str:
+    if total <= 0:
+        return "—"
+    if count <= 0:
+        return "░" * width
+    filled = max(1, int(round((count / total) * width)))
+    return "█" * filled + "░" * (width - filled)
 
 MILESTONES = [10, 25, 50, 100, 250, 500, 1000]  # announce on hit
 
@@ -163,7 +195,7 @@ async def help_cmd(ctx):
         "`!chart` — Emoji chart of your outcomes",
         "`!streak` — Show your daily roll streak",
         "`!odds` — Show Brett’s odds",
-        "`!8brett <question>` — Ask Brett (8-ball style)",
+        "`!8brett <question>` — Magic 8-Ball mode (20 responses, no stats)",
         "`!resetstats` — (Admin) Reset all stats",
     ]
     await ctx.send("\n".join(lines))
@@ -260,20 +292,45 @@ async def exportstats_cmd(ctx, member: discord.Member | None = None):
         await ctx.send("📩 Sent to your DMs.")
 
 # simpler in-channel version that doesn't depend on matplotlib
+
 @bot.command(name="chart")
 async def chart_cmd(ctx, member: discord.Member | None = None):
+    """Large emoji bar chart of outcome distribution."""
     member = member or ctx.author
     stats = load_stats()
     u = stats["users"].get(str(member.id))
     if not u or not u.get("total"):
         await ctx.send(f"{member.display_name} has no stats yet.")
         return
-    total = u["total"]
-    lines = [f"📊 **{member.display_name}** — Emoji Chart"]
+
+    total = int(u["total"])
+
+    # Build rows: (count, name), sorted by count desc then name
+    rows = []
     for name in OUTCOMES:
-        c = u["outcomes"].get(name, 0)
-        lines.append(f"{name:>16}: {emoji_bar(c, total)}  **{c}** ({pct(c, total)})")
+        c = int(u["outcomes"].get(name, 0))
+        rows.append((c, name))
+    rows.sort(key=lambda x: (-x[0], x[1]))
+
+    # Pretty, wide chart in a code block
+    lines = [
+        f"📊 **{member.display_name}** — {total} total roll{'s' if total != 1 else ''}",
+        "```"
+    ]
+    for c, name in rows:
+        emoji = EMOJI_FOR.get(name, "🎲")
+        bar = big_emoji_bar(c, total, width=28)
+        # Align name column to be neat
+        lines.append(f"{emoji} {name:<18} | {bar}  {c:>3} ({(100*c/total):.1f}%)")
+    lines.append("```")
+
+    # Call out the #1 outcome
+    top_count, top_name = rows[0]
+    if top_count > 0:
+        lines.append(f"⭐ Most rolled: **{top_name}** × {top_count} ({(100*top_count/total):.1f}%)")
+
     await ctx.send("\n".join(lines))
+
 
 @bot.command(name="brettquote")
 async def brettquote_cmd(ctx):
@@ -300,11 +357,11 @@ async def odds_cmd(ctx):
 
 @bot.command(name="8brett", aliases=["brett8", "8ball", "8b"])
 async def eight_brett_cmd(ctx, *, question: str = ""):
-    outcome = random.choice(OUTCOMES)
+    response = random.choice(EIGHT_BALL_OUTCOMES)
     if question.strip():
-        await ctx.send(f"❓ {ctx.author.mention} asked: *{question.strip()}*\n🎲 Brett says: **{outcome}**")
+        await ctx.send(f"❓ {ctx.author.mention} asked: *{question.strip()}*\n🎱 Magic 8-Brett says: **{response}**")
     else:
-        await ctx.send(f"🎲 Brett says: **{outcome}**")
+        await ctx.send(f"🎱 Magic 8-Brett says: **{response}**")
 
 @bot.command(name="resetstats")
 @commands.has_permissions(manage_guild=True)
