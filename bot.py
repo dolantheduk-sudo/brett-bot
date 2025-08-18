@@ -342,29 +342,9 @@ async def exportstats_cmd(ctx, member: discord.Member | None = None):
             file=discord.File(fp=io.BytesIO(payload), filename="brett_stats.json")
         )
     except Exception:
-        # Fallback: send to channel as a file
         await ctx.send(file=discord.File(fp=io.BytesIO(payload), filename="brett_stats.json"))
     else:
         await ctx.send("📩 Sent to your DMs.")
-
-    member = member or ctx.author
-    stats = load_stats()
-    u = stats["users"].get(str(member.id))
-    if not u:
-        await ctx.send(f"No stats to export for {member.display_name}.")
-        return
-    payload = json.dumps(u, indent=2).encode()
-    try:
-        await member.send(
-            file=discord.File(fp=discord.File(io.BytesIO(payload), filename="brett_stats.json"))
-        )
-    except Exception:
-        # Fallback: send to channel as a file
-        await ctx.send(file=discord.File(fp=io.BytesIO(payload), filename="brett_stats.json"))
-    else:
-        await ctx.send("📩 Sent to your DMs.")
-
-# simpler in-channel version that doesn't depend on matplotlib
 
 @bot.command(name="chart")
 async def chart_cmd(ctx, member: discord.Member | None = None):
@@ -438,12 +418,12 @@ async def eight_brett_cmd(ctx, *, question: str = ""):
 
 @bot.command(name="resetstats")
 @commands.has_permissions(administrator=True)
-async def resetstats_cmd(ctx):
-    global stats
+async def resetstats(ctx):
+    global stats  # keep this here if you fully reassign stats
     stats = {"rolls": {}, "total": 0}
     save_stats()
-    await ctx.send("♻️ All stats have been reset!")
-    
+    await ctx.send("🔄 All stats have been reset.")
+
 @bot.command(name="brettbattle", aliases=["battle", "duel"])
 async def brettbattle_cmd(ctx, opponent: discord.Member):
     if opponent.bot:
@@ -462,19 +442,6 @@ async def brettbattle_cmd(ctx, opponent: discord.Member):
         # deluxe style
         record_roll(p1.id, o1)
         record_roll(p2.id, o2)
-    except NameError:
-        # simple stats fallback
-        global stats  # using your earlier simple dict
-        user1 = str(p1.id)
-        user2 = str(p2.id)
-        stats.setdefault("rolls", {})
-        stats.setdefault("total", 0)
-        stats["total"] += 2
-        stats["rolls"].setdefault(user1, {"count": 0})
-        stats["rolls"].setdefault(user2, {"count": 0})
-        stats["rolls"][user1]["count"] += 1
-        stats["rolls"][user2]["count"] += 1
-        save_stats()
 
     # Decide winner
     s1 = BRETT_SCORE.get(o1, 0)
@@ -508,16 +475,6 @@ async def leaderboard_cmd(ctx):
             if guild_member_ids is not None and uid not in guild_member_ids:
                 continue
             rows.append((udata.get("total", 0), uid))
-    except NameError:
-        # simple stats fallback
-        global stats
-        # simple dict only tracks per-user counts under stats["rolls"]
-        guild_member_ids = {m.id for m in ctx.guild.members} if ctx.guild else None
-        for user_id_str, rec in stats.get("rolls", {}).items():
-            uid = int(user_id_str)
-            if guild_member_ids is not None and uid not in guild_member_ids:
-                continue
-            rows.append((rec.get("count", 0), uid))
 
     rows.sort(reverse=True)
     top = rows[:10]
@@ -551,7 +508,7 @@ async def chaos_cmd(ctx):
     await ctx.send(f"🌀 **CHAOS**: {msg}")
 
 
-@resetstats_cmd.error
+@resetstats.error
 async def resetstats_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("❌ You need **Manage Server** to use this.")
