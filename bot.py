@@ -437,10 +437,12 @@ async def eight_brett_cmd(ctx, *, question: str = ""):
         await ctx.send(f"🎱 Magic 8-Brett says: **{response}**")
 
 @bot.command(name="resetstats")
-@commands.has_permissions(manage_guild=True)
+@commands.has_permissions(administrator=True)
 async def resetstats_cmd(ctx):
-    save_stats(_blank_stats())
-    await ctx.send("🧹 All Brett stats reset.")
+    global stats
+    stats = {"rolls": {}, "total": 0}
+    save_stats()
+    await ctx.send("♻️ All stats have been reset!")
     
 @bot.command(name="brettbattle", aliases=["battle", "duel"])
 async def brettbattle_cmd(ctx, opponent: discord.Member):
