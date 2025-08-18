@@ -1,12 +1,10 @@
-import os
-import json
-import random
 import discord
 from discord.ext import commands
 
-# ---- Intents (must keep these!) ----
-intents = discord.Intents.all()
-intents.message_content = True
+# Minimal required intents
+intents = discord.Intents.default()
+intents.message_content = True  # needed for !commands
+
 print("[DEBUG] message_content:", intents.message_content)
 
 bot = commands.Bot(command_prefix="!", intents=intents)
