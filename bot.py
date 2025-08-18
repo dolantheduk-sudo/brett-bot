@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import io
 import datetime as dt
 import discord
 from discord.ext import commands
@@ -274,6 +275,25 @@ async def allstats_cmd(ctx):
 
 @bot.command(name="exportstats")
 async def exportstats_cmd(ctx, member: discord.Member | None = None):
+    member = member or ctx.author
+    stats = load_stats()
+    u = stats["users"].get(str(member.id))
+    if not u:
+        await ctx.send(f"No stats to export for {member.display_name}.")
+        return
+
+    payload = json.dumps(u, indent=2).encode()
+
+    try:
+        await member.send(
+            file=discord.File(fp=io.BytesIO(payload), filename="brett_stats.json")
+        )
+    except Exception:
+        # Fallback: send to channel as a file
+        await ctx.send(file=discord.File(fp=io.BytesIO(payload), filename="brett_stats.json"))
+    else:
+        await ctx.send("📩 Sent to your DMs.")
+
     member = member or ctx.author
     stats = load_stats()
     u = stats["users"].get(str(member.id))
