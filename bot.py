@@ -1,15 +1,17 @@
+import os
+import json
+import random
 import discord
 from discord.ext import commands
 
-intents = discord.Intents.default()
-intents.message_content = True  # 👈 lets the bot see text commands
+# ---- Intents (must keep these!) ----
+intents = discord.Intents.all()
+intents.message_content = True
+print("[DEBUG] message_content:", intents.message_content)
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-import random
-import json
-import os
-
-# Load or initialize stats
+# ---- Stats ----
 STATS_FILE = "stats.json"
 if os.path.exists(STATS_FILE):
     with open(STATS_FILE, "r") as f:
@@ -17,17 +19,14 @@ if os.path.exists(STATS_FILE):
 else:
     stats = {"rolls": {}, "total": 0}
 
-# Outcomes
 OUTCOMES = [
     "Nah",
     "You Betcha",
     "Maybe Later",
     "Could Be",
     "Don't Bet on It",
-    "Chances Are Good"
+    "Chances Are Good",
 ]
-
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
 
 def save_stats():
     with open(STATS_FILE, "w") as f:
@@ -35,7 +34,7 @@ def save_stats():
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user}")
+    print(f"[DEBUG] Logged in as {bot.user} (id={bot.user.id})")
 
 @bot.command()
 async def brett(ctx):
@@ -47,8 +46,8 @@ async def brett(ctx):
     save_stats()
     await ctx.send(f"{ctx.author.mention} Brett says: **{outcome}**")
 
-@bot.command()
-async def stats(ctx):
+@bot.command(name="stats")
+async def stats_cmd(ctx):
     user = str(ctx.author.id)
     if user in stats["rolls"]:
         count = stats["rolls"][user]["count"]
@@ -58,3 +57,4 @@ async def stats(ctx):
 
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 bot.run(TOKEN)
+
