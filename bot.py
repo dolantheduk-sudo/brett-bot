@@ -2,7 +2,12 @@ import os
 import discord
 from discord.ext import commands
 
-import config
+# Optional: load .env locally; on Render it's harmless (no .env present)
+try:
+    from dotenv import load_dotenv  # pip install python-dotenv (optional)
+    load_dotenv()
+except Exception:
+    pass
 
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True  # required for prefix commands
@@ -31,8 +36,12 @@ async def on_command_error(ctx, error):
         raise error
 
 def load_extensions():
-    bot.load_extension("cogs.stats")
-    bot.load_extension("cogs.core_games")
+    for ext in ("cogs.stats", "cogs.core_games"):
+        try:
+            bot.load_extension(ext)
+            print(f"Loaded extension: {ext}")
+        except Exception as e:
+            print(f"[EXT LOAD ERROR] {ext}: {e}")
 
 if __name__ == "__main__":
     load_extensions()
