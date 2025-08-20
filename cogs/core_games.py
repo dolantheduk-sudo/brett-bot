@@ -50,39 +50,23 @@ class CoreGames(commands.Cog):
     @commands.command(name="brett")
     @commands.cooldown(1, 2, commands.BucketType.user)
     async def brett_cmd(self, ctx: commands.Context) -> None:
-        """Classic Brett response (six outcomes) + hidden roll recorded for stats."""
-        try:
-            from constants import BRETT_RESPONSES, BRETT_RESPONSES
-        except Exception:
-            BRETT_RESPONSES = [
-                "You betcha.", "Nah.", "Maybe later.",
-                "Could be.", "Chances are good.", "Don’t bet on it.",
-            ]
-            BRETT_RESPONSES = ["Skull", "Bolt", "Star", "Warp"]
-
-        # record an outcome for stats (invisible to users)
-        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(BRETT_RESPONSES))
-
-        # show classic line
-        await ctx.send(random.choice(BRETT_RESPONSES))
+        from constants import BRETT_RESPONSES
+        # choose the line ONCE, use it for both display and stats
+        line = random.choice(BRETT_RESPONSES)
+        _record_roll_safe(ctx.guild.id, ctx.author.id, line)  # record the same key stats will read
+        await ctx.send(line)
 
     @commands.command(name="doublebrett")
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def doublebrett_cmd(self, ctx: commands.Context) -> None:
-        try:
-            from constants import BRETT_RESPONSES, BRETT_RESPONSES
-        except Exception:
-            BRETT_RESPONSES = [
-                "You betcha.", "Nah.", "Maybe later.",
-                "Could be.", "Chances are good.", "Don’t bet on it.",
-            ]
-            BRETT_RESPONSES = ["Skull", "Bolt", "Star", "Warp"]
-
-        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(BRETT_RESPONSES))
-        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(BRETT_RESPONSES))
-
-        a, b = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
+        from constants import BRETT_RESPONSES
+        a = random.choice(BRETT_RESPONSES)
+        b = random.choice(BRETT_RESPONSES)
+        # record both lines
+        _record_roll_safe(ctx.guild.id, ctx.author.id, a)
+        _record_roll_safe(ctx.guild.id, ctx.author.id, b)
         await ctx.send(f"{a}\n{b}")
+
 
     @commands.command(name="8brett", aliases=("8ball", "brett8"))
     @commands.cooldown(1, 2, commands.BucketType.user)
@@ -172,9 +156,9 @@ class CoreGames(commands.Cog):
     async def brettbattle_cmd(self, ctx: commands.Context,
                               opponent: typing.Optional[discord.Member] = None) -> None:
         try:
-            from constants import BRETT_RESPONSES, BRETT_SCORE
+            from constants import OUTCOMES, BRETT_SCORE
         except Exception:
-            BRETT_RESPONSES = ["Skull", "Bolt", "Star", "Warp"]
+            OUTCOMES = ["Skull", "Bolt", "Star", "Warp"]
             BRETT_SCORE = {"Skull": 1, "Bolt": 2, "Star": 3, "Warp": 0}
 
         opponent = _target_member(ctx, opponent)
@@ -186,7 +170,7 @@ class CoreGames(commands.Cog):
             return
 
         p1, p2 = ctx.author, opponent
-        o1, o2 = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
+        o1, o2 = random.choice(OUTCOMES), random.choice(OUTCOMES)
         _record_roll_safe(ctx.guild.id, p1.id, o1)
         _record_roll_safe(ctx.guild.id, p2.id, o2)
         s1, s2 = BRETT_SCORE.get(o1, 0), BRETT_SCORE.get(o2, 0)
