@@ -1,37 +1,16 @@
 import random
 import typing
+import time
 import discord
 from discord.ext import commands
 
-# --- constants fallbacks (so the cog still loads if constants.py is missing) ---
-try:  # use your real constants if available
-    from constants import (
-        BRETTISMS, EIGHTBALL, OUTCOMES, BRETT_SCORE,
-        INSULTS, COMPLIMENTS, BRETT_MOODS,
-    )
-except Exception:
-    BRETTISMS = [
-        "Brett approves.",
-        "Brett denies.",
-        "Brett is… thinking…",
-    ]
-    EIGHTBALL = [
-        "Yes.", "No.", "Maybe.", "Ask again later.",
-    ]
-    OUTCOMES = ["Skull", "Bolt", "Star", "Warp"]
-    BRETT_SCORE = {"Skull": 1, "Bolt": 2, "Star": 3, "Warp": 0}
-    INSULTS = ["buffoon", "goober", "clown"]
-    COMPLIMENTS = ["legend", "genius", "rockstar"]
-    BRETT_MOODS = [("chill", "🧊"), ("chaotic", "🔥"), ("sleepy", "😴")]
 
-
-def _safe_member_from_ctx_or_arg(
-    ctx: commands.Context,
-    user: typing.Optional[discord.Member],
-) -> discord.Member:
-    """Return a target member or fallback to first mention/author."""
-    if isinstance(user, discord.Member):
-        return user
+# ---------- helpers ----------
+def _target_member(ctx: commands.Context,
+                   member_opt: typing.Optional[discord.Member]) -> discord.Member:
+    """Prefer converter arg, else first mention, else author."""
+    if isinstance(member_opt, discord.Member):
+        return member_opt
     if ctx.message.mentions:
         m = ctx.message.mentions[0]
         if isinstance(m, discord.Member):
@@ -39,90 +18,80 @@ def _safe_member_from_ctx_or_arg(
     return ctx.author
 
 
-class CoreGames(commands.Cog):
-    """Fun/random commands for Brett Bot.
+def _record_roll_safe(gid: int, uid: int, outcome: str) -> None:
+    """Try new storage signature, then legacy; never crash commands."""
+    try:
+        from utils import storage as _storage  # lazy import
+    except Exception:
+        return
+    ts = int(time.time())
+    try:
+        # Preferred: record_roll(gid, uid, outcome, ts)
+        _storage.record_roll(gid, uid, outcome, ts)  # type: ignore[attr-defined]
+        return
+    except TypeError:
+        pass
+    except Exception:
+        pass
+    try:
+        # Legacy: record_roll(uid, outcome)
+        _storage.record_roll(uid, outcome)  # type: ignore[misc]
+    except Exception:
+        pass
 
-    All commands are designed to be resilient: they handle missing args,
-    prefer converters for members, and fail gracefully.
-    """
+
+class CoreGames(commands.Cog):
+    """Fun/random commands for Brett Bot (discord.py 2.x)."""
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # --- persistence hooks (best-effort; won't crash if utils.db changes) ---
-    def record_roll(self, user_id: int, outcome: str) -> None:
+    # ---------- simple randomizers ----------
+    @commands.command(name="brett")
+    @commands.cooldown(1, 2, commands.BucketType.user)
+    async def brett_cmd(self, ctx: commands.Context) -> None:
+        """Classic Brett response (six outcomes) + hidden roll recorded for stats."""
         try:
-            from utils import storage  # type: ignore
+            from constants import BRETT_RESPONSES, OUTCOMES
         except Exception:
-            return
+            BRETT_RESPONSES = [
+                "You betcha.", "Nah.", "Maybe later.",
+                "Could be.", "Chances are good.", "Don’t bet on it.",
+            ]
+            OUTCOMES = ["Skull", "Bolt", "Star", "Warp"]
+
+        # record an outcome for stats (invisible to users)
+        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES))
+
+        # show classic line
+        await ctx.send(random.choice(BRETT_RESPONSES))
+
+    @commands.command(name="doublebrett")
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def doublebrett_cmd(self, ctx: commands.Context) -> None:
         try:
-            if hasattr(db, "record_roll"):
-                db.record_roll(user_id, outcome)
-            elif hasattr(db, "increment_roll"):
-                db.increment_roll(user_id, outcome)
+            from constants import BRETT_RESPONSES, OUTCOMES
         except Exception:
-            # stats are best-effort; never break a game message due to DB
-            pass
+            BRETT_RESPONSES = [
+                "You betcha.", "Nah.", "Maybe later.",
+                "Could be.", "Chances are good.", "Don’t bet on it.",
+            ]
+            OUTCOMES = ["Skull", "Bolt", "Star", "Warp"]
 
-    # ------------------ Simple randomizers ------------------
-@commands.command(name="brett")
-@commands.cooldown(1, 2, commands.BucketType.user)
-async def brett_cmd(self, ctx: commands.Context) -> None:
-    # Visible reply: classic six
-    from constants import BRETT_RESPONSES, OUTCOMES
-    import time
-    import random
+        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES))
+        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES))
 
-    # Record a hidden Brett outcome for stats
-    outcome = random.choice(OUTCOMES)   # this fuels !stats, !allstats, !leaderboard
-    try:
-        # new storage signature (preferred)
-        from utils import storage
-        storage.record_roll(ctx.guild.id, ctx.author.id, outcome, int(time.time()))
-    except TypeError:
-        # legacy storage signature fallback
-        try:
-            storage.record_roll(ctx.author.id, outcome)  # type: ignore
-        except Exception:
-            pass
-    except Exception:
-        pass
+        a, b = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
+        await ctx.send(f"{a}\n{b}")
 
-    # Show the classic line to the user
-    await ctx.send(random.choice(BRETT_RESPONSES))
-
-
-@commands.command(name="doublebrett")
-@commands.cooldown(1, 3, commands.BucketType.user)
-async def doublebrett_cmd(self, ctx: commands.Context) -> None:
-    from constants import BRETT_RESPONSES, OUTCOMES
-    import time
-    import random
-
-    # Record two hidden outcomes
-    try:
-        from utils import storage
-        now = int(time.time())
-        storage.record_roll(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES), now)
-        storage.record_roll(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES), now)
-    except TypeError:
-        try:
-            storage.record_roll(ctx.author.id, random.choice(OUTCOMES))  # type: ignore
-            storage.record_roll(ctx.author.id, random.choice(OUTCOMES))  # type: ignore
-        except Exception:
-            pass
-    except Exception:
-        pass
-
-    # Show two classic lines
-    a, b = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
-    await ctx.send(f"{a}\n{b}")
-
-
-    @commands.command(name="8brett", aliases=["8ball", "brett8"])  # usage: !8brett
+    @commands.command(name="8brett", aliases=("8ball", "brett8"))
     @commands.cooldown(1, 2, commands.BucketType.user)
     async def eight_brett_cmd(self, ctx: commands.Context, *, question: str = "") -> None:
-        """Brett answers questions like a magic 8-ball."""
+        """Magic 8-ball style answer (no stats). Usage: !8brett <question>"""
+        try:
+            from constants import EIGHTBALL
+        except Exception:
+            EIGHTBALL = ["Yes.", "No.", "Maybe.", "Ask again later."]
         if not question.strip():
             await ctx.send("Ask a question, e.g. `!8brett Is Brett real?`")
             return
@@ -131,107 +100,101 @@ async def doublebrett_cmd(self, ctx: commands.Context) -> None:
     @commands.command(name="coin")
     @commands.cooldown(1, 2, commands.BucketType.user)
     async def coin_cmd(self, ctx: commands.Context) -> None:
-        """Flip a coin."""
         await ctx.send(random.choice(["Heads", "Tails"]))
 
     @commands.command(name="choose")
     @commands.cooldown(1, 2, commands.BucketType.user)
     async def choose_cmd(self, ctx: commands.Context, *, options: str = "") -> None:
-        """Choose among options. Use `|` to separate or provide space-separated words.
-        Examples: `!choose pizza | tacos | burgers` or `!choose red blue green`.
-        """
-        if not options.strip():
+        s = options.strip()
+        if not s:
             await ctx.send("Give me options, e.g. `!choose pizza | tacos | sushi`")
             return
-        if "|" in options:
-            parts = [p.strip() for p in options.split("|") if p.strip()]
-        else:
-            parts = [p for p in options.split() if p]
+        parts = [p.strip() for p in (s.split("|") if "|" in s else s.split()) if p.strip()]
         if len(parts) < 2:
             await ctx.send("Give me at least two options.")
             return
         await ctx.send(random.choice(parts))
-        
-    @commands.command(name="chaos")
-    async def chaos_cmd(self, ctx):
-        """Invoke the Warp (random Chaos outcome)."""
-        import random
-        try:
-            from constants import CHAOS_OUTCOMES_40K
-        except ImportError:
-            CHAOS_OUTCOMES_40K = [
-                "The Warp is silent... or maybe not wired up?",
-            ]
 
-        result = random.choice(CHAOS_OUTCOMES_40K)
-        await ctx.send(f"🔮 CHAOS BRETT decrees: **{result}**")
-
-
-    # ------------------ Social fun ------------------
+    # ---------- social fun ----------
     @commands.command(name="insult")
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def insult_cmd(
-        self,
-        ctx: commands.Context,
-        member: typing.Optional[discord.Member] = None,
-    ) -> None:
-        """Light-hearted insult. Defaults to the caller if no user given."""
-        target = _safe_member_from_ctx_or_arg(ctx, member)
-        insult = random.choice(INSULTS)
-        await ctx.send(f"{target.mention}, you {insult}.")
+    async def insult_cmd(self, ctx: commands.Context,
+                         member: typing.Optional[discord.Member] = None) -> None:
+        try:
+            from constants import INSULTS
+        except Exception:
+            INSULTS = ["dumbass", "dipshit", "clown", "goober", "piece of shit", "retard", "cumstain", "dick", "asshat"]
+        target = _target_member(ctx, member)
+        await ctx.send(f"{target.mention}, you {random.choice(INSULTS)}.")
 
     @commands.command(name="compliment")
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def compliment_cmd(
-        self,
-        ctx: commands.Context,
-        member: typing.Optional[discord.Member] = None,
-    ) -> None:
-        """Give someone a compliment. Defaults to caller."""
-        target = _safe_member_from_ctx_or_arg(ctx, member)
-        comp = random.choice(COMPLIMENTS)
-        await ctx.send(f"{target.mention} is a certified {comp} ✨")
+    async def compliment_cmd(self, ctx: commands.Context,
+                             member: typing.Optional[discord.Member] = None) -> None:
+        try:
+            from constants import COMPLIMENTS
+        except Exception:
+            COMPLIMENTS = ["fucking legend", "genius", "rockstar", "smart guy", "winner", "Bepi", "King", "real fuckin deal", "Man who Fucks"]
+        target = _target_member(ctx, member)
+        await ctx.send(f"{target.mention} is a certified {random.choice(COMPLIMENTS)} ✨")
 
     @commands.command(name="mood")
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def mood_cmd(
-        self,
-        ctx: commands.Context,
-        member: typing.Optional[discord.Member] = None,
-    ) -> None:
-        """Report someone's mood. `!mood @user` or defaults to caller."""
-        target = _safe_member_from_ctx_or_arg(ctx, member)
+    async def mood_cmd(self, ctx: commands.Context,
+                       member: typing.Optional[discord.Member] = None) -> None:
+        try:
+            from constants import BRETT_MOODS
+        except Exception:
+            BRETT_MOODS = [
+                ("Chill", "🧊"),
+                ("Chaotic", "🌀"),
+                ("Sleepy", "😴"),
+                ("Hyped AF", "⚡"),
+                ("Salty", "🧂"),
+                ("Mad as fuck actually", "😡"),
+                ("Goofy", "🤪"),
+                ("Zen", "🪷"),
+                ("Fucking Spooky", "👻"),
+                ("Lucky", "🍀"),
+                ("Edgy", "🗡️"),
+                ("Sussy", "🕵️"),
+                ("Fucking Cringe", "🙈"),
+                ("Fucking Based", "🪙"),
+                ("Dank", "💨"),
+]
+        target = _target_member(ctx, member)
         label, emoji = random.choice(BRETT_MOODS)
         await ctx.send(f"{emoji} **{target.display_name}** feels *{label}* today.")
 
-    # ------------------ Versus ------------------
-    @commands.command(name="brettbattle", aliases=["battle", "duel", "fight"])
+    # ---------- versus ----------
+    @commands.command(name="brettbattle", aliases=("battle", "duel", "fight"))
     @commands.cooldown(1, 5, commands.BucketType.channel)
-    async def brettbattle_cmd(
-        self,
-        ctx: commands.Context,
-        opponent: typing.Optional[discord.Member] = None,
-    ) -> None:
-        """Battle another user: `!brettbattle @user`. Highest roll wins."""
-        opponent = _safe_member_from_ctx_or_arg(ctx, opponent)
+    async def brettbattle_cmd(self, ctx: commands.Context,
+                              opponent: typing.Optional[discord.Member] = None) -> None:
+        try:
+            from constants import OUTCOMES, BRETT_SCORE
+        except Exception:
+            OUTCOMES = ["Skull", "Bolt", "Star", "Warp"]
+            BRETT_SCORE = {"Skull": 1, "Bolt": 2, "Star": 3, "Warp": 0}
+
+        opponent = _target_member(ctx, opponent)
         if opponent.id == ctx.author.id:
-            await ctx.send("You can’t battle yourself — find a worthy foe.")
+            await ctx.send("You can’t battle yourself retard — find a worthy foe.")
             return
         if opponent.bot:
-            await ctx.send("Brett refuses to battle bots 😤")
+            await ctx.send("Brett refuses to battle mindless bots 😤")
             return
 
         p1, p2 = ctx.author, opponent
         o1, o2 = random.choice(OUTCOMES), random.choice(OUTCOMES)
-        self.record_roll(p1.id, o1)
-        self.record_roll(p2.id, o2)
+        _record_roll_safe(ctx.guild.id, p1.id, o1)
+        _record_roll_safe(ctx.guild.id, p2.id, o2)
         s1, s2 = BRETT_SCORE.get(o1, 0), BRETT_SCORE.get(o2, 0)
 
-        if s1 == s2:
-            verdict = "🤝 It’s a tie. The Warp is fickle."
-        elif s1 > s2:
+        verdict = "🤝 It’s a tie. Shit's fucked."
+        if s1 > s2:
             verdict = f"🏆 **{p1.display_name}** wins!"
-        else:
+        elif s2 > s1:
             verdict = f"🏆 **{p2.display_name}** wins!"
 
         await ctx.send(
@@ -241,6 +204,17 @@ async def doublebrett_cmd(self, ctx: commands.Context) -> None:
                 verdict,
             ])
         )
+
+    # ---------- chaos ----------
+    @commands.command(name="chaos")
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def chaos_cmd(self, ctx: commands.Context) -> None:
+        """Invoke the Warp (random Chaos outcome)."""
+        try:
+            from constants import CHAOS_OUTCOMES_40K
+        except Exception:
+            CHAOS_OUTCOMES_40K = ["The Warp is silent... or maybe not wired up?"]
+        await ctx.send(f"🔮 CHAOS BRETT decrees: **{random.choice(CHAOS_OUTCOMES_40K)}**")
 
 
 async def setup(bot: commands.Bot) -> None:
