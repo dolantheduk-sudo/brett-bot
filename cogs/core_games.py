@@ -68,15 +68,15 @@ class CoreGames(commands.Cog):
     @commands.command(name="brett")
     @commands.cooldown(1, 2, commands.BucketType.user)
     async def brett_cmd(self, ctx: commands.Context) -> None:
-        """Brett says a thing."""
-        msg = random.choice(BRETTISMS)
-        await ctx.send(msg)
+        from constants import BRETT_RESPONSES  # pulls the live list
+        await ctx.send(random.choice(BRETT_RESPONSES))
+
 
     @commands.command(name="doublebrett")
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def doublebrett_cmd(self, ctx: commands.Context) -> None:
-        """Brett says two things."""
-        a, b = random.choice(BRETTISMS), random.choice(BRETTISMS)
+        from constants import BRETT_RESPONSES
+        a, b = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
         await ctx.send(f"{a}\n{b}")
 
     @commands.command(name="8brett", aliases=["8ball", "brett8"])  # usage: !8brett
