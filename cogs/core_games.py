@@ -65,19 +65,59 @@ class CoreGames(commands.Cog):
             pass
 
     # ------------------ Simple randomizers ------------------
-    @commands.command(name="brett")
-    @commands.cooldown(1, 2, commands.BucketType.user)
-    async def brett_cmd(self, ctx: commands.Context) -> None:
-        from constants import BRETT_RESPONSES  # pulls the live list
-        await ctx.send(random.choice(BRETT_RESPONSES))
+@commands.command(name="brett")
+@commands.cooldown(1, 2, commands.BucketType.user)
+async def brett_cmd(self, ctx: commands.Context) -> None:
+    # Visible reply: classic six
+    from constants import BRETT_RESPONSES, OUTCOMES
+    import time
+    import random
+
+    # Record a hidden Brett outcome for stats
+    outcome = random.choice(OUTCOMES)   # this fuels !stats, !allstats, !leaderboard
+    try:
+        # new storage signature (preferred)
+        from utils import storage
+        storage.record_roll(ctx.guild.id, ctx.author.id, outcome, int(time.time()))
+    except TypeError:
+        # legacy storage signature fallback
+        try:
+            storage.record_roll(ctx.author.id, outcome)  # type: ignore
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+    # Show the classic line to the user
+    await ctx.send(random.choice(BRETT_RESPONSES))
 
 
-    @commands.command(name="doublebrett")
-    @commands.cooldown(1, 3, commands.BucketType.user)
-    async def doublebrett_cmd(self, ctx: commands.Context) -> None:
-        from constants import BRETT_RESPONSES
-        a, b = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
-        await ctx.send(f"{a}\n{b}")
+@commands.command(name="doublebrett")
+@commands.cooldown(1, 3, commands.BucketType.user)
+async def doublebrett_cmd(self, ctx: commands.Context) -> None:
+    from constants import BRETT_RESPONSES, OUTCOMES
+    import time
+    import random
+
+    # Record two hidden outcomes
+    try:
+        from utils import storage
+        now = int(time.time())
+        storage.record_roll(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES), now)
+        storage.record_roll(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES), now)
+    except TypeError:
+        try:
+            storage.record_roll(ctx.author.id, random.choice(OUTCOMES))  # type: ignore
+            storage.record_roll(ctx.author.id, random.choice(OUTCOMES))  # type: ignore
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+    # Show two classic lines
+    a, b = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
+    await ctx.send(f"{a}\n{b}")
+
 
     @commands.command(name="8brett", aliases=["8ball", "brett8"])  # usage: !8brett
     @commands.cooldown(1, 2, commands.BucketType.user)
