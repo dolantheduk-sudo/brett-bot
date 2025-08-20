@@ -52,16 +52,16 @@ class CoreGames(commands.Cog):
     async def brett_cmd(self, ctx: commands.Context) -> None:
         """Classic Brett response (six outcomes) + hidden roll recorded for stats."""
         try:
-            from constants import BRETT_RESPONSES, OUTCOMES
+            from constants import BRETT_RESPONSES, BRETT_RESPONSES
         except Exception:
             BRETT_RESPONSES = [
                 "You betcha.", "Nah.", "Maybe later.",
                 "Could be.", "Chances are good.", "Don’t bet on it.",
             ]
-            OUTCOMES = ["Skull", "Bolt", "Star", "Warp"]
+            BRETT_RESPONSES = ["Skull", "Bolt", "Star", "Warp"]
 
         # record an outcome for stats (invisible to users)
-        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES))
+        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(BRETT_RESPONSES))
 
         # show classic line
         await ctx.send(random.choice(BRETT_RESPONSES))
@@ -70,16 +70,16 @@ class CoreGames(commands.Cog):
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def doublebrett_cmd(self, ctx: commands.Context) -> None:
         try:
-            from constants import BRETT_RESPONSES, OUTCOMES
+            from constants import BRETT_RESPONSES, BRETT_RESPONSES
         except Exception:
             BRETT_RESPONSES = [
                 "You betcha.", "Nah.", "Maybe later.",
                 "Could be.", "Chances are good.", "Don’t bet on it.",
             ]
-            OUTCOMES = ["Skull", "Bolt", "Star", "Warp"]
+            BRETT_RESPONSES = ["Skull", "Bolt", "Star", "Warp"]
 
-        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES))
-        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(OUTCOMES))
+        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(BRETT_RESPONSES))
+        _record_roll_safe(ctx.guild.id, ctx.author.id, random.choice(BRETT_RESPONSES))
 
         a, b = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
         await ctx.send(f"{a}\n{b}")
@@ -172,9 +172,9 @@ class CoreGames(commands.Cog):
     async def brettbattle_cmd(self, ctx: commands.Context,
                               opponent: typing.Optional[discord.Member] = None) -> None:
         try:
-            from constants import OUTCOMES, BRETT_SCORE
+            from constants import BRETT_RESPONSES, BRETT_SCORE
         except Exception:
-            OUTCOMES = ["Skull", "Bolt", "Star", "Warp"]
+            BRETT_RESPONSES = ["Skull", "Bolt", "Star", "Warp"]
             BRETT_SCORE = {"Skull": 1, "Bolt": 2, "Star": 3, "Warp": 0}
 
         opponent = _target_member(ctx, opponent)
@@ -186,7 +186,7 @@ class CoreGames(commands.Cog):
             return
 
         p1, p2 = ctx.author, opponent
-        o1, o2 = random.choice(OUTCOMES), random.choice(OUTCOMES)
+        o1, o2 = random.choice(BRETT_RESPONSES), random.choice(BRETT_RESPONSES)
         _record_roll_safe(ctx.guild.id, p1.id, o1)
         _record_roll_safe(ctx.guild.id, p2.id, o2)
         s1, s2 = BRETT_SCORE.get(o1, 0), BRETT_SCORE.get(o2, 0)

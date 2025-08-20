@@ -2,7 +2,7 @@ import io
 import json
 from discord.ext import commands
 
-from constants import OUTCOMES, BRETT_QUOTES, EMOJI_FOR, MILESTONES
+from constants import BRETT_RESPONSES, BRETT_QUOTES, EMOJI_FOR, MILESTONES
 from utils.storage import load_stats
 from utils.helpers import emoji_bar, big_emoji_bar, pct
 
@@ -40,7 +40,7 @@ class Stats(commands.Cog):
         member = member or ctx.author
         if not isinstance(member, discord.Member): member = ctx.author
 
-        stats = load_stats(OUTCOMES)
+        stats = load_stats(BRETT_RESPONSES)
         u = stats["users"].get(str(member.id))
         if not u:
             await ctx.send(f"{member.display_name} has no Brett stats yet.")
@@ -48,7 +48,7 @@ class Stats(commands.Cog):
 
         total = u["total"]
         lines = [f"📊 **{member.display_name}** — {total} roll{'s' if total!=1 else ''}"]
-        for name in OUTCOMES:
+        for name in BRETT_RESPONSES:
             c = u["outcomes"].get(name, 0)
             lines.append(f"- {name}: **{c}** ({pct(c, total)})  {emoji_bar(c, total)}")
 
@@ -63,10 +63,10 @@ class Stats(commands.Cog):
 
     @commands.command(name="allstats")
     async def allstats_cmd(self, ctx):
-        stats = load_stats(OUTCOMES)
+        stats = load_stats(BRETT_RESPONSES)
         g = stats["global"]; total = g["total"]
         lines = [f"🌐 **Global Brett Stats** — {total} total roll{'s' if total!=1 else ''}"]
-        for name in OUTCOMES:
+        for name in BRETT_RESPONSES:
             c = g["outcomes"].get(name, 0)
             lines.append(f"- {name}: **{c}** ({pct(c, total)})")
 
@@ -93,7 +93,7 @@ class Stats(commands.Cog):
         member = member or ctx.author
         if not isinstance(member, discord.Member): member = ctx.author
 
-        stats = load_stats(OUTCOMES)
+        stats = load_stats(BRETT_RESPONSES)
         u = stats["users"].get(str(member.id))
         if not u:
             await ctx.send(f"No stats to export for {member.display_name}.")
@@ -112,14 +112,14 @@ class Stats(commands.Cog):
         import discord
         member = member or ctx.author
         if not isinstance(member, discord.Member): member = ctx.author
-        stats = load_stats(OUTCOMES)
+        stats = load_stats(BRETT_RESPONSES)
         u = stats["users"].get(str(member.id))
         if not u or not u.get("total"):
             await ctx.send(f"{member.display_name} has no stats yet.")
             return
 
         total = int(u["total"])
-        rows = sorted(((int(u["outcomes"].get(n, 0)), n) for n in OUTCOMES), key=lambda x: (-x[0], x[1]))
+        rows = sorted(((int(u["outcomes"].get(n, 0)), n) for n in BRETT_RESPONSES), key=lambda x: (-x[0], x[1]))
 
         lines = [
             f"📊 **{member.display_name}** — {total} total roll{'s' if total != 1 else ''}",
@@ -146,7 +146,7 @@ class Stats(commands.Cog):
         import discord
         member = member or ctx.author
         if not isinstance(member, discord.Member): member = ctx.author
-        stats = load_stats(OUTCOMES)
+        stats = load_stats(BRETT_RESPONSES)
         u = stats["users"].get(str(member.id))
         if not u or u.get("streak_days", 0) == 0:
             await ctx.send(f"{member.display_name} has no current streak.")
@@ -155,15 +155,15 @@ class Stats(commands.Cog):
 
     @commands.command(name="odds")
     async def odds_cmd(self, ctx):
-        per = 100 / len(OUTCOMES)
+        per = 100 / len(BRETT_RESPONSES)
         lines = ["🎯 **Brett Odds (default)**"]
-        for name in OUTCOMES:
+        for name in BRETT_RESPONSES:
             lines.append(f"- {name}: {per:.1f}%")
         await ctx.send("\n".join(lines))
 
     @commands.command(name="leaderboard", aliases=["top","lb"])
     async def leaderboard_cmd(self, ctx):
-        stats = load_stats(OUTCOMES)
+        stats = load_stats(BRETT_RESPONSES)
         users = stats.get("users", {})
         rows = sorted(((u.get("total", 0), int(uid)) for uid, u in users.items()), reverse=True)[:10]
 
