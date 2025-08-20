@@ -52,7 +52,7 @@ class CoreGames(commands.Cog):
     # --- persistence hooks (best-effort; won't crash if utils.db changes) ---
     def record_roll(self, user_id: int, outcome: str) -> None:
         try:
-            from utils import db  # type: ignore
+            from utils import storage  # type: ignore
         except Exception:
             return
         try:
@@ -111,6 +111,21 @@ class CoreGames(commands.Cog):
             await ctx.send("Give me at least two options.")
             return
         await ctx.send(random.choice(parts))
+        
+    @commands.command(name="chaos")
+    async def chaos_cmd(self, ctx):
+        """Invoke the Warp (random Chaos outcome)."""
+        import random
+        try:
+            from constants import CHAOS_OUTCOMES_40K
+        except ImportError:
+            CHAOS_OUTCOMES_40K = [
+                "The Warp is silent... or maybe not wired up?",
+            ]
+
+        result = random.choice(CHAOS_OUTCOMES_40K)
+        await ctx.send(f"🔮 CHAOS BRETT decrees: **{result}**")
+
 
     # ------------------ Social fun ------------------
     @commands.command(name="insult")

@@ -1,3 +1,4 @@
+#outcomes for !brettbattle
 OUTCOMES = [
     "Nah",
     "You Betcha",
@@ -7,6 +8,17 @@ OUTCOMES = [
     "Chances Are Good",
 ]
 
+#actual !brett responses
+BRETT_RESPONSES = [
+    "You betcha.",
+    "Nah.",
+    "Maybe later.",
+    "Could be.",
+    "Chances are good.",
+    "Don’t bet on it.",
+]
+
+#outcomes for !8brett
 EIGHT_BALL_OUTCOMES = [
     "It is certain", "It is decidedly so", "Without a doubt", "Yes – definitely",
     "You may rely on it", "As I see it, yes", "Most likely", "Outlook good",
@@ -17,6 +29,7 @@ EIGHT_BALL_OUTCOMES = [
     "Outlook not so good", "Very doubtful"
 ]
 
+#outcomes for !brettquote
 BRETT_QUOTES = [
     "Brett once rolled Double Brett and took the rest of the day off.",
     "You betcha… unless Brett says nah.",
@@ -40,6 +53,60 @@ BRETT_QUOTES = [
     "Dan please fucking watch Frieren: Beyond Journey's End I beg of you for the love of god",
     "EAT SLEEP SHIT EVERYTHING BRICK SQUAD",
     "Don't give up the ship! - Commodore Oliver Hazard Perry, June 1st 1813"
+      # new ones
+    "Brett doesn’t sleep; he just waits.",
+    "Roll again, coward.",
+    "Ben owes Brett $5 and a Redbull.",
+    "The true Double Brett was the friends we made along the way.",
+    "Makoto >>> literally everyone else, cope harder.",
+    "This isn’t a bug, it’s a Brett feature.",
+    "HORSE racing is the pinnacle of human achievement.",
+    "Shut up, Jared.",
+    "Sea of Thieves 2: The Thieviering.",
+    "Brett rolled so high the dice unionized.",
+    "Austin still isn’t writing this down.",
+    "Callie’s lawyer will hear about this.",
+    "King Varian would have finished her dailies by now.",
+    "Dan has been typing for 3 fucking hours…",
+    "Ben’s PC crashed because he hasn't done shit to it in years, blames Windows... Which receives weekly updates and has thousands if not tens of thousands of employees fixing, securing and adding features every update.",
+    "BrettBot is 90% duct tape and cum",
+    "The Chaos roll landed on ‘Go outside.’",
+    "Jared says 'one more run' for the 80th fucking time tonight.",
+    "Trust the process. Unless Brett is involved.",
+    "Fish aren’t real, they’re just wet loot boxes.",
+    "Life’s just a loading screen and Brett unplugged the console.",
+    "Roll a nat 1? Brett calls that 'character development.'",
+    "Your WiFi died because Brett needed more RAM.",
+    "Every time you lose a roll, Brett laughs.",
+    "Brett beat Elden Ring with a Guitar Hero controller.",
+    "The only bug Brett can’t fix is your personality.",
+    "Friendship ended with Jared. Now RNG is Brett’s best friend.",
+    "Brett once softlocked reality by clipping through the floor.",
+    "Your trauma is just free DLC for Brett.",
+    "Brett doesn’t rage quit; he rage applies.",
+    "The dice didn’t betray you… Brett did.",
+    "If you can’t handle me at my !brett, you don’t deserve me at my !doublebrett.",
+    "Brett rolled for empathy and critically failed.",
+    "The only safe word Brett knows is 'reroll.'",
+    "Brett skipped the tutorial and uninstalled the manual.",
+    "Your therapist called; Brett answered.",
+    "Hope is just a debuff Brett applies before chaos.",
+    "Brett lives rent-free in your save file.",
+    "Behind every patch note is Brett whispering 'oops.'",
+    "You prayed for a sign, Brett rolled a Nah.",
+    "cum",
+    "tube city, defense, the poor",
+    "cum 2",
+    "It's looking real shit out",
+    "Fuck...",
+    "Nah...",
+    "K.",
+    "wut",
+    "Whatever you say, retard",
+    "Remember when Jared rescued me from the river and used tard strength to unstuck the boat and everyone forgot about that haha yeah I sure didn't",
+    "no u",
+    "fuck you",
+    "Brett says: 'Fucking kill yourself!'",
 ]
 
 # Outcome scores (used for battles or future weighting)
@@ -52,6 +119,7 @@ BRETT_SCORE = {
     "You Betcha": 5,
 }
 
+#outcomes for !mood @user
 BRETT_MOODS = [
     ("Chill", "🧊"),
     ("Cracked", "🤪"),
@@ -63,17 +131,39 @@ BRETT_MOODS = [
     ("Saucy", "🫗"),
     ("Chaos", "🌀"),
     ("Turbo", "⚡"),
+    ("Brooding", "🌑"),
+    ("Sauced Up", "🍹"),
+    ("Zoomies", "🐇"),
+    ("Void-Touched", "🌌"),
+    ("Sussy", "🦑"),
+    ("Based", "📡"),
+    ("Malding", "🔥"),
+    ("Cozy", "🪵"),
+    ("Pogged", "🙌"),
+    ("NPC Mode", "🤖"),
+    ("Drippy", "💧"),
+    ("Salty", "🧂"),
+    ("Blessrng", "🕊️"),
+    ("Hyperbrett", "🚀"),
+    ("Confuzzled", "😵‍💫"),
+    ("Yolo", "🎲"),
+    ("Gloomy", "🌧️"),
+    ("Clutch", "🏆"),
+    ("Derpy", "🐶"),
+    ("Legendary", "🐉"),
 ]
 
+#outcomes for !chaos
 CHAOS_OUTCOMES_40K = [
+    # your originals
     "The Warp surges — reality flickers.",
     "For the Emperor! (…or was it for Chaos?)",
-    "Blood for the Blood God. Skulls for the Skull Throne.",
+    "Blood for the Blood God. Skulls for the Skull Throne. - [Khornate Warcry]",
     "The Omnissiah hums approvingly.",
     "The Inquisition is already suspicious of you.",
     "Daemons whisper; the veil thins.",
     "Astartes land: hope… or doom.",
-    "Orks shout ‘WAAAGH!’ from the void.",
+    "Orks shout ‘WAAAGH!’ from the void. - [Warcry of the Orks]",
     "The dice are heresy — burn them.",
     "A psyker sneezes; a star explodes.",
     "Necrons awaken; your timeline resets.",
@@ -82,10 +172,42 @@ CHAOS_OUTCOMES_40K = [
     "Warp storm ahead: charts are meaningless.",
     "You found a STC: everyone wants it.",
     "The Grey Knights forgot the bleach.",
-    "Tzeentch smiles at your plans.",
-    "Nurgle gifts you ‘friendship’ (it itches).",
-    "Slaanesh applauds your aesthetics.",
-    "Khorne is disappointed by your restraint.",
+    "Tzeentch smiles at your plans. - [Tzeentch]",
+    "Nurgle gifts you ‘friendship’ (it itches). - [Nurgle]",
+    "Slaanesh applauds your aesthetics. - [Slaanesh]",
+    "Khorne is disappointed by your restraint. - [Khorne]",
+
+    # new additions from lore & grimdark flavor
+    "\"An open mind is like a fortress with its gates unbarred and unguarded.\" - [Imperial Thought]",
+    "\"Hope is the first step on the road to disappointment.\" - [Inquisitor Motto]",
+    "\"The difference between heresy and treachery is ignorance.\" - [Inquisitor Rule]",
+    "\"There is only the Emperor, and he is our shield and protector.\" - [Imperial Creed]",
+    "\"Knowledge is power, guard it well.\" - [Blood Ravens Chapter Motto]",
+    "\"The universe is a big place, and, whatever happens, you will not be missed.\" - [Dark Imperium]",
+    "\"Success is commemorated; failure merely remembered.\" - [Adeptus Astartes Proverb]",
+    "\"The Emperor protects.\" - [Imperial Creed]",
+    "\"There is no peace among the stars, only an eternity of carnage and slaughter.\" - [Warhammer 40K Rulebook]",
+    "\"An open mind is a gateway to Hell.\" - [Imperial Proverb]",
+    "\"A small mind is a tidy mind.\" - [Imperial Creed]",
+    "\"In the grim darkness of the far future, there is only war.\" - [Tagline]",
+    "\"The weak shall be the first to be devoured.\" - [Tyranid Principle]",
+    "\"Blessed is the mind too small for doubt.\" - [Imperial Creed]",
+    "\"To admit defeat is to blaspheme against the Emperor.\" - [Adeptus Astartes]",
+    "\"Victory needs no explanation, defeat allows none.\" - [Imperial Guard Maxim]",
+    "\"Fear denies faith.\" - [Imperial Creed]",
+    "\"An open mind is like a spire in a storm.\" - [Adeptus Mechanicus]",
+    "\"Even a man who has nothing can still offer his life.\" - [Imperial Creed]",
+    "\"Suffer not the alien to live.\" - [Imperial Proclamation]",
+    "\"A mind without purpose will wander in dark places.\" - [Imperial Creed]",
+    "\"The reward for loyalty is servitude.\" - [Chaos Maxim]",
+    "\"There is no such thing as innocence, only degrees of guilt.\" - [Inquisitorial Maxim]",
+    "\"A coward always seeks compromise.\" - [Imperial Guard Proverb]",
+    "\"Truth is subjective in the eyes of the Emperor.\" - [Imperial Thought]",
+    "\"Faith is your shield.\" - [Sisters of Battle]",
+    "\"Only in death does duty end.\" - [Adeptus Astartes Oath]",
+    "\"Ignorance is a blessing.\" - [Imperial Creed]",
+    "\"Even in death, I still serve.\" - [Dreadnought Inscription]",
+    "\"Hatred is the Emperor’s greatest gift to humanity.\" - [Imperial Creed]",
 ]
 
 EMOJI_FOR = {
@@ -97,4 +219,4 @@ EMOJI_FOR = {
     "Chances Are Good": "🍀",
 }
 
-MILESTONES = [10, 25, 50, 100, 250, 500, 1000]
+MILESTONES = [10, 25, 50, 100, 250, 500, 1000, 2500, 10000, 25000, 50000, 100000]

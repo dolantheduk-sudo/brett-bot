@@ -3,12 +3,11 @@ import json
 from discord.ext import commands
 
 from constants import OUTCOMES, BRETT_QUOTES, EMOJI_FOR, MILESTONES
-from utils.db import load_stats
+from utils.storage import load_stats
 from utils.helpers import emoji_bar, big_emoji_bar, pct
 
 HELP_LINES = [
     "🎲 **Brett Bot Commands**",
-    "*Case Sensitive, Jankem Spankem*",
     "`!brett` — Roll the Brett die",
     "`!doublebrett` — Roll twice",
     "`!stats` — Your personal roll stats",
@@ -20,10 +19,12 @@ HELP_LINES = [
     "`!odds` — Show Brett’s odds",
     "`!8brett <question>` — Magic 8-Ball (no stats)",
     "`!resetstats` — (Admin) Reset all stats",
-    "**!brettbattle @user** — Battle another user",
-    "**!leaderboard** — Show top rollers (global)",
-    "**!mood [@user]** — Random mood",
-    "**!chaos** — Invoke the Warp",
+    "!brettbattle @user** — Battle another user",
+    "!leaderboard — Show top rollers (global)",
+    "!mood [@user] — Random mood",
+    "!chaos — Invoke the Warp",
+    "!insult - Hurt your own feelings!",
+    "!compliment - Boost your own feelings!"
 ]
 
 class Stats(commands.Cog):
