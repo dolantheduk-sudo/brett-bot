@@ -3,6 +3,18 @@ import asyncio
 import discord
 from discord.ext import commands
 
+import logging, traceback
+logging.basicConfig(level=logging.INFO)
+
+async def load_extensions();
+    for ext in ("cogs.stats", "cogs.core_games"):
+        try:
+            await bot.load_extension(ext)
+            print(f"[EXT OK] {ext}")
+        except Exception as e:
+            print(f"[EXT LOAD ERROR] {ext}: {e}")
+            traceback.print_exc() # <-- see the real reason
+
 # Optional for local dev; harmless on Render if not installed
 try:
     from dotenv import load_dotenv
@@ -35,6 +47,10 @@ async def on_command_error(ctx, error):
     else:
         raise error
 
+@bot.command(name="ping")
+async def ping(ctx):
+    await ctx.send("pong")
+
 async def load_extensions():
     for ext in ("cogs.stats", "cogs.core_games"):
         try:
@@ -44,12 +60,13 @@ async def load_extensions():
             print(f"[EXT LOAD ERROR] {ext}: {e}")
 
 async def main():
-    await load_extensions()
     token = os.getenv("DISCORD_BOT_TOKEN", "").strip()
     if not token:
         raise SystemExit("Set DISCORD_BOT_TOKEN in the environment.")
-    # start the bot
-    await bot.start(token)
+
+    async with bot:   # ensures proper cleanup and lifecycle
+        await load_extensions()
+        await bot.start(token)
 
 if __name__ == "__main__":
     asyncio.run(main())
