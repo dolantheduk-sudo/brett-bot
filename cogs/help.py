@@ -113,22 +113,26 @@ class PrettyHelp(commands.Cog):
         emb = discord.Embed(title=title, color=discord.Color.blurple())
         emb.set_footer(text=f"Requested by {ctx.author.display_name}")
 
-        # --- Grid formatting (2 columns of compact signatures) ---
         # Build compact signatures like `!choose <options>`
         sigs = [f"`{command_signature(c)}`" for c in cmds]
-        # Split evenly across two columns
-        left_col, right_col = chunk(sigs, (len(sigs) + 1) // 2)
-        left = "\n".join(left_col) or "—"
-        right = "\n".join(right_col) or "—"
+
+        # Split safely into two columns
+        mid = (len(sigs) + 1) // 2  # ceil(len/2)
+        left_col = sigs[:mid]
+        right_col = sigs[mid:]
+
+        left = "\n".join(left_col) if left_col else "—"
+        right = "\n".join(right_col) if right_col else "—"
 
         emb.add_field(name="Commands", value=left, inline=True)
         emb.add_field(name="\u200b", value=right, inline=True)
         emb.add_field(
             name="\u200b",
             value="*Tip:* Separate list options with `|`, e.g. `!choose pizza | tacos | sushi`",
-            inline=False
+            inline=False,
         )
         return emb
+
 
 async def setup(bot: commands.Bot):
     bot.help_command = None  # disable default
