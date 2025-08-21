@@ -19,7 +19,7 @@ BRETT_RESPONSES = [
 ]
 
 #outcomes for !8brett
-EIGHT_BALL_OUTCOMES = [
+EIGHTBALL = [
     "It is certain", "It is decidedly so", "Without a doubt", "Yes – definitely",
     "You may rely on it", "As I see it, yes", "Most likely", "Outlook good",
     "Yes", "Signs point to yes",
@@ -211,12 +211,12 @@ CHAOS_OUTCOMES_40K = [
 ]
 
 EMOJI_FOR = {
-    "Nah": "❌",
-    "You Betcha": "✅",
-    "Maybe Later": "⏳",
-    "Could Be": "🤔",
-    "Don't Bet on It": "🚫",
-    "Chances Are Good": "🍀",
+    "Nah.": "❌",
+    "You Betcha.": "✅",
+    "Maybe Later.": "⏳",
+    "Could Be.": "🤔",
+    "Don't Bet on It.": "🚫",
+    "Chances Are Good.": "🍀",
 }
 
 MILESTONES = [10, 25, 50, 100, 250, 500, 1000, 2500, 10000, 25000, 50000, 100000]
