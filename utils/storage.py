@@ -105,3 +105,7 @@ def record_roll(guild_id: int, user_id: int, outcome: str, ts: float | None = No
 def record_roll_legacy(user_id: int, outcome: str) -> None:
     """Legacy entrypoint: (uid, outcome)."""
     _record_roll_impl(0, user_id, outcome, None)
+    
+def save_stats(stats: Dict[str, Any]) -> None:
+    """Write the stats dictionary back to disk safely."""
+    _atomic_save(stats)

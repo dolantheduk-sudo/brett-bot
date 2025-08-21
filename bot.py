@@ -5,6 +5,7 @@ from discord.ext import commands
 
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
+INTENTS.members = True
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"),
                    intents=INTENTS, case_insensitive=True,
@@ -15,7 +16,7 @@ async def ping(ctx):  # sanity check that bot base is alive
     await ctx.send("pong")
 
 async def load_extensions():
-    for ext in ("cogs.stats", "cogs.core_games"):
+    for ext in ("cogs.stats", "cogs.core_games", "cogs.help"):
         try:
             await bot.load_extension(ext)
             print(f"[EXT OK] {ext}")
@@ -29,6 +30,13 @@ async def on_ready():
     # Show how many prefix commands actually registered
     print("[COMMANDS]", sorted([c.name for c in bot.commands]))
     print("Type !ping")
+
+@bot.event
+async def on_command_error(ctx, error):
+    # avoid double-handling CommandNotFound if you prefer
+    if isinstance(error, commands.CommandNotFound):
+        return
+    traceback.print_exception(type(error), error, error.__traceback__)
 
 async def main():
     token = os.getenv("DISCORD_BOT_TOKEN", "").strip()
