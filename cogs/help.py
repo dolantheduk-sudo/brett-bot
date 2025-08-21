@@ -81,6 +81,8 @@ class PrettyHelp(commands.Cog):
 
             cog_name = cmd.cog_name or "Other"
             grouped.setdefault(cog_name, []).append(cmd)
+            # remove self from dropdown
+            grouped.pop("PrettyHelp", None)
 
         # Create an embed page per known cog in COG_META order first
         used_keys = set()

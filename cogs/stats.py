@@ -6,30 +6,6 @@ from constants import BRETT_RESPONSES, BRETT_QUOTES, EMOJI_FOR, MILESTONES
 from utils.storage import load_stats, save_stats
 from utils.helpers import emoji_bar, big_emoji_bar, pct
 
-
-HELP_LINES = [
-    "🎲 **Brett Bot Commands**",
-    "`!brett` — Roll Brett",
-    "`!doublebrett` — Roll Brett *twice*",
-    "`!stats` — Your personal roll stats",
-    "`!allstats` — Global stats & top rollers",
-    "`!exportstats` — DM you a JSON of your stats",
-    "`!brettquote` — Brett's Quote of the Day",
-    "`!chart` — Chart of your personal outcomes",
-    "`!streak` — Show your daily roll streak",
-    "`!odds` — Show Brett’s odds",
-    "`!8brett <question>` — Magic 8-Ball (no stats)",
-    "`!resetstats` — (Admin) Reset all stats",
-    "`!resetmystats` — Reset only your stats",
-    "`!brettbattle` @user — Battle another user",
-    "`!leaderboard` — Show top rollers (global)",
-    "`!mood [@user]` — Random mood",
-    "`!chaos` — Invoke the Warp",
-    "`!insult` — Hurt your own feelings!",
-    "`!compliment` — Boost your own feelings!",
-]
-
-
 class Stats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
