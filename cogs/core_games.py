@@ -145,7 +145,7 @@ class CoreGames(commands.Cog):
                 ("Fucking Cringe", "🙈"),
                 ("Fucking Based", "🪙"),
                 ("Dank", "💨"),
-]
+            ]
         target = _target_member(ctx, member)
         label, emoji = random.choice(BRETT_MOODS)
         await ctx.send(f"{emoji} **{target.display_name}** feels *{label}* today.")
