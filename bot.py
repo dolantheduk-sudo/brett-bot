@@ -6,6 +6,7 @@ from discord.ext import commands
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
 INTENTS.members = True
+INTENTS.presences = True
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"),
                    intents=INTENTS, case_insensitive=True,

@@ -27,7 +27,6 @@ HELP_LINES = [
     "`!chaos` — Invoke the Warp",
     "`!insult` — Hurt your own feelings!",
     "`!compliment` — Boost your own feelings!",
-    "
 ]
 
 
