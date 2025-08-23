@@ -9,11 +9,7 @@ from utils.helpers import emoji_bar, big_emoji_bar, pct
 class Stats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.command(name="OLDhelp")
-    async def help_cmd(self, ctx):
-        await ctx.send("\n".join(HELP_LINES))
-
+    
     @commands.command(name="stats")
     async def stats_cmd(self, ctx, member=None):
         import discord

@@ -118,9 +118,9 @@ class CoreGames(commands.Cog):
         try:
             from constants import COMPLIMENTS
         except Exception:
-            COMPLIMENTS = ["fucking legend", "genius", "rockstar", "smart guy", "winner", "Bepi", "King", "real fuckin deal", "Man who Fucks"]
+            COMPLIMENTS = ["are a fucking legend", "are a genius", "are a rockstar", "are a smart guy", "are a winner", "are Bepi", "are a King", "are the real fuckin deal", "are a Man who Fucks"]
         target = _target_member(ctx, member)
-        await ctx.send(f"{target.mention} is a certified {random.choice(COMPLIMENTS)} ✨")
+        await ctx.send(f"{target.mention} you {random.choice(COMPLIMENTS)} ✨")
 
     @commands.command(name="mood")
     @commands.cooldown(1, 3, commands.BucketType.user)

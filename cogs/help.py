@@ -4,30 +4,48 @@ from typing import Dict, List, Tuple
 import discord
 from discord.ext import commands
 
-# Map cog names to a nice title + emoji + order
+# Map cog class names to a nice title + emoji + order
+# NOTE: Keys must match each Cog class name (e.g., class CoreGames(...): -> "CoreGames")
 COG_META = {
     "CoreGames": ("🎯 Core Games", 0),
-    "Stats": ("📊 Stats", 1),
+    "Brettventures": ("🧭 Brettventures", 1),
+    "Stats": ("📊 Stats & Leaderboards", 2),
     # Add more cogs here if you like:
-    # "Economy": ("💰 Economy", 2),
-    # "Quests": ("🗺️ Quests", 3),
-    # "Admin": ("🛠️ Admin", 4),
+    # "Economy": ("💰 Economy", 3),
+    # "Quests": ("🗺️ Quests", 4),
+    # "Admin": ("🛠️ Admin", 5),
+}
+
+# Optional per-cog usage tips shown at the bottom of each page
+COG_TIPS = {
+    "CoreGames": "*Tip:* Separate list options with `|`, e.g. `!choose pizza | tacos | sushi`",
+    "Brettventures": (
+        "**Brettventures basics**\n"
+        "• Start: `!adventure start`\n"
+        "• Your stats: `!adventure stats`\n"
+        "• Explore (uses stamina): `!adventure explore`\n"
+        "• Train a stat: `!adventure train <STR|AGI|INT|POW|SMT>`\n"
+        "• Rest / stamina: `!adventure rest`\n"
+        "_Stamina regenerates over time; check `!adventure stats` for ETA._"
+    ),
+    "Stats": "*Tip:* Try `!leaderboard` and `!mystats` after you’ve been rolling for a bit.",
 }
 
 def chunk(lst: List[str], n: int) -> List[List[str]]:
     return [lst[i:i+n] for i in range(0, len(lst), n)]
 
 def command_signature(cmd: commands.Command) -> str:
-    """Make a compact prefix-style signature, e.g. !choose <options>"""
+    """Make a compact prefix-style signature, e.g. !adventure start <arg>"""
     prefix = "!"
-    params = []
+    # Use qualified_name so subcommands show as 'adventure start'
+    sig = f"{prefix}{cmd.qualified_name}"
+    params: List[str] = []
     for name, p in cmd.clean_params.items():
         # Optional -> [arg], required -> <arg>
         if p.default is not inspect._empty:
             params.append(f"[{name}]")
         else:
             params.append(f"<{name}>")
-    sig = f"{prefix}{cmd.name}"
     if params:
         sig += " " + " ".join(params)
     return sig
@@ -58,7 +76,7 @@ class PrettyHelp(commands.Cog):
     async def help_cmd(self, ctx: commands.Context):
         # 1) Group commands by cog (only those the user can run)
         grouped: Dict[str, List[commands.Command]] = {}
-        for cmd in sorted(self.bot.commands, key=lambda c: c.name):
+        for cmd in sorted(self.bot.commands, key=lambda c: c.qualified_name):
             if cmd.hidden:
                 continue
             try:
@@ -83,7 +101,7 @@ class PrettyHelp(commands.Cog):
             cmds = grouped.get(cog_name, [])
             if not cmds:
                 continue
-            pages[cog_name] = self._embed_for(ctx, label, cmds)
+            pages[cog_name] = self._embed_for(ctx, label, cmds, tip=COG_TIPS.get(cog_name))
             order.append((cog_name, label))
             used.add(cog_name)
 
@@ -91,7 +109,7 @@ class PrettyHelp(commands.Cog):
             if cog_name in used:
                 continue
             label = f"📦 {cog_name}"
-            pages[cog_name] = self._embed_for(ctx, label, cmds)
+            pages[cog_name] = self._embed_for(ctx, label, cmds, tip=COG_TIPS.get(cog_name))
             order.append((cog_name, label))
 
         if not pages:
@@ -109,11 +127,11 @@ class PrettyHelp(commands.Cog):
         first_key = order[0][0]
         await ctx.send(embed=pages[first_key], view=HelpView(pages, order))
 
-    def _embed_for(self, ctx: commands.Context, title: str, cmds: List[commands.Command]) -> discord.Embed:
+    def _embed_for(self, ctx: commands.Context, title: str, cmds: List[commands.Command], tip: str | None = None) -> discord.Embed:
         emb = discord.Embed(title=title, color=discord.Color.blurple())
         emb.set_footer(text=f"Requested by {ctx.author.display_name}")
 
-        # Build compact signatures like `!choose <options>`
+        # Build compact signatures like `!adventure start <options>`
         sigs = [f"`{command_signature(c)}`" for c in cmds]
 
         # Split safely into two columns
@@ -126,11 +144,10 @@ class PrettyHelp(commands.Cog):
 
         emb.add_field(name="Commands", value=left, inline=True)
         emb.add_field(name="\u200b", value=right, inline=True)
-        emb.add_field(
-            name="\u200b",
-            value="*Tip:* Separate list options with `|`, e.g. `!choose pizza | tacos | sushi`",
-            inline=False,
-        )
+
+        if tip:
+            emb.add_field(name="\u200b", value=tip, inline=False)
+
         return emb
 
 

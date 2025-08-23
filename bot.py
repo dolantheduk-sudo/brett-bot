@@ -17,7 +17,7 @@ async def ping(ctx):  # sanity check that bot base is alive
     await ctx.send("pong")
 
 async def load_extensions():
-    for ext in ("cogs.stats", "cogs.core_games", "cogs.help"):
+    for ext in ("cogs.stats", "cogs.core_games", "cogs.help", "cogs.brettventures"):
         try:
             await bot.load_extension(ext)
             print(f"[EXT OK] {ext}")
